@@ -31,7 +31,7 @@ def get_config(key: str, default, doc, expected_type=str):
             return os.environ[envvar].split(" ")
         return expected_type(os.environ[envvar])
     default_config_location = os.path.join(os.path.expanduser("~"), ".config", CONFIG_FILE_NAME)
-    config_location = os.environ.get(PROJECT_ENVVAR_PREFIX "_CONFIG", default_config_location)
+    config_location = os.environ.get(PROJECT_ENVVAR_PREFIX +  "_CONFIG", default_config_location)
     if not os.path.exists(config_location) and config_location != default_config_location:
         raise ConfigurationError(f"Configuration file {config_location} does not exist")
     if not os.path.exists(config_location):
