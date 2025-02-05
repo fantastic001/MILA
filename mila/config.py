@@ -1,6 +1,7 @@
 import os 
 import json
 import importlib 
+import inspect
 import sys 
 
 class ConfigurationError(Exception):
@@ -82,10 +83,39 @@ def get_search_path():
 
 get_disabled_plugins = lambda: get_config_list("disabled_plugins", [], "List of plugins to disable")
 
+import importlib
+import pkgutil
+
+def _discover_submodules(package_name):
+    """
+    Given a string like 'my_package', discover and import all submodules of 'my_package'
+    even if they're not explicitly imported in my_package/__init__.py.
+    """
+    # First, import the base package
+    package = importlib.import_module(package_name)
+
+    # If the package has a __path__ attribute, we can walk its submodules
+    # (Packages almost always have __path__, unless it's a namespace pkg).
+    if not hasattr(package, '__path__'):
+        # It's not a package or does not have submodules in a normal sense
+        return []
+
+    submodules = []
+    for finder, modname, ispkg in pkgutil.walk_packages(package.__path__, package.__name__ + "."):
+        submodules.append(modname)
+
+    return submodules
+
+def _expand_plugin(plugin):
+    if plugin.endswith(".*"):
+        return [name for name in _discover_submodules(plugin[:-2])]
+    return [plugin]
+
 def list_plugins():
     plugins = DEFAULT_PLUGINS
     plugins += get_config_list("plugins", [], "List of plugins to load")
     disabled_plugins = get_disabled_plugins()
+    plugins = [plugin for p in plugins for plugin in _expand_plugin(p)]
     plugins = [plugin for plugin in plugins if plugin not in disabled_plugins]
     return list(set(plugins))
 
