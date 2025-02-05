@@ -1,0 +1,2 @@
+class MyBaseClass:
+    pass 
