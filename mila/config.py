@@ -75,7 +75,9 @@ def get_search_path():
     return get_config_list("plugin_search_path", [
         "/usr/local/share/" + PROJECT_NAME + "/plugins",
         "/usr/share/" + PROJECT_NAME + "/plugins",
-        os.path.join(os.path.expanduser("~"), "." + PROJECT_NAME, "plugins")
+        os.path.join(os.path.expanduser("~"), "." + PROJECT_NAME, "plugins"),
+        os.path.join(os.path.expanduser("~"), ".local", "share", PROJECT_NAME, "plugins"),
+        os.getcwd()
     ], "List of plugin search paths")
 
 get_disabled_plugins = lambda: get_config_list("disabled_plugins", [], "List of plugins to disable")
@@ -118,6 +120,24 @@ def get_plugin_result(method_name, *args, **kwargs):
     if len(found_results) == 1:
         return found_results[0][1]
     raise ConflictError(f"Multiple plugins returned results for {method_name}: {found_results}")
+
+def get_symbols_satisfying(predicate):
+    plugins = load_plugins()
+    result = []
+    visited = set()
+    for name, plugin in plugins:
+        for symbol in dir(plugin):
+            if symbol in visited:
+                continue
+            visited.add(symbol)
+            if predicate(getattr(plugin, symbol)):
+                result.append(getattr(plugin, symbol))
+    return result
+
+def get_classes_inheriting(base_class):
+    return get_symbols_satisfying(lambda x: isinstance(x, type) and issubclass(x, base_class) and x != base_class)
+
+
 
 def pluggable(func):
     func_name = func.__name__
