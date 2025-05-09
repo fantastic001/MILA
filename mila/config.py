@@ -157,12 +157,13 @@ def get_symbols_satisfying(predicate):
     visited = set()
     for name, plugin in plugins:
         for symbol in dir(plugin):
-            if symbol in visited:
+            if (name, symbol) in visited:
                 continue
-            visited.add(symbol)
+            visited.add((name, symbol))
             if predicate(getattr(plugin, symbol)):
                 result.append(getattr(plugin, symbol))
     return result
+
 
 def get_classes_inheriting(base_class):
     return get_symbols_satisfying(lambda x: isinstance(x, type) and issubclass(x, base_class) and x != base_class)
