@@ -22,7 +22,9 @@ DEFAULT_PLUGINS = [
 def get_config_location():
     return os.environ.get(PROJECT_ENVVAR_PREFIX + "_CONFIG", os.path.join(os.path.expanduser("~"), ".config", CONFIG_FILE_NAME))
 
-def get_config(key: str, default, doc, expected_type=str):
+def get_config(key: str, default, doc, expected_type=str, obj = None):
+    if obj is not None and hasattr(obj, key):
+        return expected_type(getattr(obj, key))
     config = {} 
     envvar = PROJECT_ENVVAR_PREFIX + "_" + key.upper()
     if envvar in os.environ:
@@ -41,26 +43,26 @@ def get_config(key: str, default, doc, expected_type=str):
         config = json.load(f)
     return expected_type(config.get(key, default))
 
-def get_config_int(key: str, default, doc) -> int:
-    return get_config(key, default, doc, expected_type=int)
+def get_config_int(key: str, default, doc, obj = None) -> int:
+    return get_config(key, default, doc, expected_type=int, obj=obj)
 
-def get_config_str(key: str, default, doc) -> str:
-    return get_config(key, default, doc, expected_type=str)
+def get_config_str(key: str, default, doc, obj = None) -> str:
+    return get_config(key, default, doc, expected_type=str, obj=obj)
 
-def get_config_bool(key: str, default, doc) -> bool:
-    return get_config(key, default, doc, expected_type=bool)
+def get_config_bool(key: str, default, doc, obj = None) -> bool:
+    return get_config(key, default, doc, expected_type=bool, obj=obj)
 
-def get_config_list(key: str, default, doc) -> list:
-    res =  get_config(key, default, doc, expected_type=list)
+def get_config_list(key: str, default, doc, obj = None) -> list:
+    res =  get_config(key, default, doc, expected_type=list, obj=obj)
     if res is None or res == "" or len(res) == 0 or res == [""]:
         return default
     return res
 
-def get_config_dict(key: str, default, doc) -> dict:
-    return get_config(key, default, doc, expected_type=dict)
+def get_config_dict(key: str, default, doc, obj=None) -> dict:
+    return get_config(key, default, doc, expected_type=dict, obj=obj)
 
-def get_config_float(key: str, default, doc) -> float:
-    return get_config(key, default, doc, expected_type=float)
+def get_config_float(key: str, default, doc, obj=None) -> float:
+    return get_config(key, default, doc, expected_type=float, obj=obj)
 
 def set_config(key: str, value):
     config_location = get_config_location()
